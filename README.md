@@ -47,3 +47,13 @@ An autonomous feeder makes it possible to feed your pets from anywhere in the wo
 - :battery:Li-ion battary cell (18650)
 
 ## How to setup telegram bot
+> In telegram app find "@BotFather", click/type: /start 
+![](/src/docs/bot_father_1.png)
+
+> Then click/type command: /newbot
+![](/src/docs/bot_father_2.png)
+
+> Then reply to bot's messages, like enter: nickname for bot, username for bot
+![](/src/docs/bot_father_3.png)
+
+> After that you will get api-token, you should copy it to the 
