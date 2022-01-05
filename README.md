@@ -29,6 +29,8 @@ An autonomous feeder makes it possible to feed your pets from anywhere in the wo
 
 ### Hardware requirements:
 - USB ASP progremmer
+
 ![](/src/docs/usb_asp_programmer.png =200x200)
 - ESP32cam
+
 ![](/src/docs/esp_32_cam.png =200x200)
