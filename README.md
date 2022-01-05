@@ -78,3 +78,10 @@ status - Display current information
 ![](/src/docs/bot_idbot_1.png)
 > You need to put this id/id's to line [who can access](https://github.com/IBishopI/fishfeeder_esp32cam_telegram/blob/1f3482a3206f5d00bdcbed5298e4f268f3639a8e/src/Arduino%20IDE%20code/fishfeeder_esp32cam.ino#L76) and set chat_id for bot reply when fish fed by schedule [this one](https://github.com/IBishopI/fishfeeder_esp32cam_telegram/blob/1f3482a3206f5d00bdcbed5298e4f268f3639a8e/src/Arduino%20IDE%20code/fishfeeder_esp32cam.ino#L77)
 
+## How to upload sketch to esp32cam
+
+![](/src/docs/esp32cam_and_programmer.png)
+
+## How to solder components
+
+![](/src/docs/schema.png)
