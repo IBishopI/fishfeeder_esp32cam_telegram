@@ -25,4 +25,5 @@ An autonomous feeder makes it possible to feed your pets from anywhere in the wo
 - ESP32 core 1.0.6 (most stable for my opinion) [github](https://github.com/espressif/arduino-esp32) or [json](https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json)
 - [Universal Telegram Bot library](https://github.com/witnessmenow/Universal-Arduino-Telegram-Bot)
 
+[Boostnote](https://github.com/BoostIO/Boostnote "This is Boostnote's repository")
 
