@@ -8,7 +8,7 @@
 
 ## Description:
 
-This project is aimed at people who love aquarium fish but spend too much time at work or on business trips.
+This project is aimed at people who love:smiling_face_with_three_hearts: aquarium fish but spend too much time at work or on business trips.
 An autonomous feeder makes it possible to feed your pets from anywhere in the world.
 
 ## Capabilities:
@@ -30,20 +30,8 @@ An autonomous feeder makes it possible to feed your pets from anywhere in the wo
 ### Hardware requirements:
 - USB ASP progremmer
 
-![](/src/docs/usb_asp_programmer.png =200x200)
+![](/src/docs/usb_asp_programmer.png)
 - ESP32cam
 
-![](/src/docs/esp_32_cam.png =200x200)
+![](/src/docs/esp_32_cam.png)
 
-
-
-![](https://gyazo.com/eb5c5741b6a9a16c692170a41a49c858.png | width=100)
-
-![](https://gyazo.com/eb5c5741b6a9a16c692170a41a49c858.png | width=100)
-![](https://gyazo.com/eb5c5741b6a9a16c692170a41a49c858.png =250x250)
-
-![](https://gyazo.com/eb5c5741b6a9a16c692170a41a49c858.png =250x250)
-![](https://gyazo.com/eb5c5741b6a9a16c692170a41a49c858.png)
-
-Copy <img> in browser DevTools. Replace ![](url) to <img>. Add width(and height) attr.
-<img src="https://camo.githubusercontent.com/..." data-canonical-src="https://gyazo.com/eb5c5741b6a9a16c692170a41a49c858.png" width="200" height="400" />
