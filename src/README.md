@@ -1,4 +1,4 @@
 # Fish feeder
-![My Badge](/docs/badge_ff.svg)
+![My Badge](/src/docs/badge_ff.svg)
 
 
