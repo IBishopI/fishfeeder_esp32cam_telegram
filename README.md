@@ -24,6 +24,7 @@ An autonomous feeder makes it possible to feed your pets from anywhere in the wo
 - Arduino IDE 1.8 and higher [here](https://www.arduino.cc/en/software)
 - ESP32 core 1.0.6 (most stable for my opinion) [github](https://github.com/espressif/arduino-esp32) or [json](https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json)
 - [Universal Telegram Bot library](https://github.com/witnessmenow/Universal-Arduino-Telegram-Bot)
+- CH340 driver if you will use USBASP programmer with ch340 chip - [Windows](https://sparks.gogo.co.nz/assets/_site_/downloads/CH34x_Install_Windows_v3_4.zip), [Mac](https://github.com/adrianmihalko/ch340g-ch34g-ch34x-mac-os-x-driver/raw/master/CH34x_Install_V1.5.pkg), [Linux](https://sparks.gogo.co.nz/assets/_site_/downloads/CH340_LINUX.zip "Already built in kernel but if isnt you can download it by click this link") or you can findout it on [official website](http://www.wch.cn/download/CH341SER_MAC_ZIP.html)
 
-[Boostnote](https://github.com/BoostIO/Boostnote "This is Boostnote's repository")
-
+*[HTML]: Hyper Text Markup Language
+*[W3C]: World Wide Web Consortium
