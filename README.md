@@ -16,9 +16,9 @@ An autonomous feeder makes it possible to feed your pets from anywhere in the wo
 - [x]  Schedule feeding once a day
 - [x]  Take a picture (with and without flash)
 - [x]  Find out the status and time of the last feeding
-- [ ]  Clearing the blockage
-- [ ]  Light and thermostat control
-- [ ]  Measurement of water temperature
+- [ ]  (further release) Clearing the blockage
+- [ ]  (further release) Light and thermostat control
+- [ ]  (further release) Measurement of water temperature
 
 ### Software requirements
 - Arduino IDE 1.8 and higher [here](https://www.arduino.cc/en/software)
