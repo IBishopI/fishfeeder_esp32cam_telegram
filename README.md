@@ -8,7 +8,7 @@
 
 ## Description:
 
-This project is aimed at people who love:smiling_face_with_three_hearts: aquarium fish but spend too much time at work or on business trips.
+This project is aimed at people who love:smiling_face_with_three_hearts: aquarium fish:tropical_fish: but spend too much time at work or on business trips.
 An autonomous feeder makes it possible to feed your pets from anywhere in the world.
 
 ## Capabilities:
