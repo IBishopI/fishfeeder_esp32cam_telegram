@@ -53,7 +53,28 @@ An autonomous feeder makes it possible to feed your pets from anywhere in the wo
 > Then click/type command: /newbot
 ![](/src/docs/bot_father_2.png)
 
-> Then reply to bot's messages, like enter: nickname for bot, username for bot
+> Then reply to bot's messages, like enter: nickname for bot, username for bot (you can specify any name/username that you want)
 ![](/src/docs/bot_father_3.png)
 
-> After that you will get api-token, you should copy it to the 
+> After that you will get api-token, you should copy it to [this line](https://github.com/IBishopI/fishfeeder_esp32cam_telegram/blob/1f3482a3206f5d00bdcbed5298e4f268f3639a8e/src/Arduino%20IDE%20code/fishfeeder_esp32cam.ino#L21) in sketch
+![](/src/docs/bot_father_4.png)
+
+> Setting bot menu: like that (type: /setcommands)
+> ![](/src/docs/bot_father_5.png)
+
+```
+flash - enable / disable flash
+photo - Take a picture
+feed - Feed the fish
+schedule - Schedule a feed
+feedsize - Set portion
+status - Display current information
+```
+>  
+![](/src/docs/bot_father_6.png)
+
+> After that you need to know your personal chat_id. Also you can get groupid or get chat_id's from multiple accounts for users who would get access to your fish feeder.
+
+![](/src/docs/bot_idbot_1.png)
+> You need to put this id/id's to line [who can access](https://github.com/IBishopI/fishfeeder_esp32cam_telegram/blob/1f3482a3206f5d00bdcbed5298e4f268f3639a8e/src/Arduino%20IDE%20code/fishfeeder_esp32cam.ino#L76) and set chat_id for bot reply when fish fed by schedule [this one](https://github.com/IBishopI/fishfeeder_esp32cam_telegram/blob/1f3482a3206f5d00bdcbed5298e4f268f3639a8e/src/Arduino%20IDE%20code/fishfeeder_esp32cam.ino#L77)
+
