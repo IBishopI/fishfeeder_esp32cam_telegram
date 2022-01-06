@@ -89,7 +89,7 @@ status - Display current information
 ![](/src/docs/schema.png)
 
 ## Materials and tools:
-- plastic bottle - 38mm neck
+- plastic bottle - 38mm neck (volume related how big your aquarium and how many fish do you have, I'm using 330ml and 500ml bottles for aquarium 40L)
 
 ![](/src/docs/pbottle.png)
 - FDM 3D printer
