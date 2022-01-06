@@ -82,6 +82,8 @@ status - Display current information
 
 ![](/src/docs/esp32cam_and_programmer.png)
 
+![](/src/docs/upload_sketch.png)
+
 ## How to solder components
 
 ![](/src/docs/schema.png)
