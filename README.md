@@ -89,7 +89,7 @@ status - Display current information
 ![](/src/docs/schema.png)
 
 ## Materials and tools:
-- plastic botle - 38mm neck
+- plastic bottle - 38mm neck
 
 ![](/src/docs/pbottle.png)
 - FDM 3D printer
