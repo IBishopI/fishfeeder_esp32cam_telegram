@@ -87,3 +87,11 @@ status - Display current information
 ## How to solder components
 
 ![](/src/docs/schema.png)
+
+## Materials and tools:
+- plastic botle - 38mm neck
+
+![](/src/docs/pbottle.png)
+- FDM 3D printer
+- PLA/ABS plastic
+- solder
