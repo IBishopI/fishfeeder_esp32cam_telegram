@@ -15,9 +15,8 @@
 #include "soc/rtc_cntl_reg.h" 
 #include <UniversalTelegramBot.h>
 #include <GyverButton.h>
-//static camera_config_t camera_example_config;
 #define APSSID "fishfeeder" //Имя точки доступа
-#define APPSK  "yyyyyyyy" //Пароль точки доступа
+#define APPSK  "XXXXXXXX" //Пароль точки доступа
 #define BOT_TOKEN "xxxxxxxx:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" //Токен телеграм бота
 #define FLASH_LED_PIN 4 // Пин вспышки
 
