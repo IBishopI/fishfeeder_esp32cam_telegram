@@ -4,7 +4,6 @@
 #include <DNSServer.h>
 #include <ESPmDNS.h>
 #include <EEPROM.h>
-#include <ESP32Servo.h>
 #include "esp_camera.h"
 #include "esp_pm.h"
 #include "esp_http_server.h"
@@ -15,10 +14,19 @@
 #include "soc/rtc_cntl_reg.h" 
 #include <UniversalTelegramBot.h>
 #include <GyverButton.h>
+//static camera_config_t camera_example_config;
 #define APSSID "fishfeeder" //Имя точки доступа
-#define APPSK  "XXXXXXXX" //Пароль точки доступа
+#define APPSK  "10203040" //Пароль точки доступа
 #define BOT_TOKEN "xxxxxxxx:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" //Токен телеграм бота
 #define FLASH_LED_PIN 4 // Пин вспышки
+
+/* PWM vars for servo */
+const int servoPin = 15;
+int dutyCycle = 0;
+const int PWMFreq = 50;
+const int PWMChannel = 2;
+const int PWMResolution = 8;
+const int MAX_DUTY_CYCLE = (int)(pow(2, PWMResolution) - 1);
 
 /* Переменные пинов подключения камеры */
 #define CAMERA_MODEL_AI_THINKER
@@ -53,12 +61,14 @@ bool exist_cred = false; // если натройки существуют
 char ssid[32] = ""; //инициализация переменных под чтение данных из EEPROM
 char password[32] = ""; //инициализация переменных под чтение данных из EEPROM
 const byte DNS_PORT = 53; // DNS порт
-IPAddress apIP(8, 8, 4, 4); // IP - адресс точки доступа
+IPAddress apIP(8, 8, 8, 8); // IP - адресс точки доступа
 IPAddress netMsk(255, 255, 255, 0); // Маска подсети точки доступа
-Servo feedservo; //объявляем объект feedservo из класса Servo
+//Servo feedservo; //объявляем объект feedservo из класса Servo
 WebServer server(80); //Объект сервер из класса вэб-сервер
 DNSServer dnsServer; // Объект днс-сервера
+byte conn_counter=0;
 /* Служебные переменные WIFI */
+char *wifi_states[] = {"WL_IDLE_STATUS","WL_NO_SSID_AVAIL","WL_SCAN_COMPLETED","WL_CONNECTED","WL_CONNECT_FAILED","WL_CONNECTION_LOST","WL_DISCONNECTED"};
 boolean connect;
 unsigned long lastConnectTry = 0;
 unsigned int status = WL_IDLE_STATUS;
@@ -114,9 +124,9 @@ void loadCredentials() {
     ssid[0] = 0;
     password[0] = 0;
   }
-//  Serial.println("Recovered credentials:");
-//  Serial.println(ssid);
-//  Serial.println(strlen(password) > 0 ? "********" : "<no password>");
+  Serial.println("Recovered credentials:");
+  Serial.println(ssid);
+  Serial.println(strlen(password) > 0 ? "********" : "<no password>");
   if (strlen(password) > 0) {
     exist_cred = true;
     }
@@ -124,11 +134,11 @@ void loadCredentials() {
         scheduled_time_arr[0] = getValue(scheduled_time, ':', 0).toInt();
         scheduled_time_arr[1] = getValue(scheduled_time, ':', 1).toInt();
         scheduled_time_str = scheduled_time;
-//        Serial.print("Recovered schedule: ");
-//        Serial.println(scheduled_time);
+        Serial.print("Recovered schedule: ");
+        Serial.println(scheduled_time);
     }
   if(strlen(feedsize_f_for_eeprom) > 0) { 
-    feedsize_f = atoi(feedsize_f_for_eeprom); //Serial.print("Recovered feedsize: "); Serial.println(feedsize_f);
+    feedsize_f = atoi(feedsize_f_for_eeprom); Serial.print("Recovered feedsize: "); Serial.println(feedsize_f);
     }
 }
 /** Сохранение WLAN имя/пароля в EEPROM */
@@ -155,21 +165,19 @@ esp_err_t my_camera_init() {
  }
   esp_err_t err = esp_camera_init(&camera_example_config);
   if (err != ESP_OK) {
-//    Serial.printf("Camera init failed with error 0x%x\n", err);
+    Serial.printf("Camera init failed with error 0x%x", err);
     return err;
   }
-//  Serial.printf("Camera Init OK");
+  Serial.printf("Camera Init OK");
   return ESP_OK;
 }
 
 /** Функции обработки страниц вэб сервера */
-const String csstyle = F("<style type=\"text/css\"> .div_stl{ width:80%;border:0px;border-radius:0.5rem; box-shadow: rgba(99, 99, 99, 0.3) -4px 4px 3px,rgba(99, 99, 99, 0.5) -1px 1px 2px,inset 0px 0px 1px rgba(0,0,0,0.3); } .btn_stl{border:0;border-radius:0.5rem; background: linear-gradient(to top left, #45609D 0%, #7A91C4 100%);color:#fff;line-height:2.4rem;font-size:1.2rem;width:70%;} .btn_stl:hover{background: linear-gradient(to top left, #699D45 0%, #8DC47A 100%);} </style>"); //CSS 
+const String csstyle = F("style=\"border:0;border-radius:0.5rem; background: linear-gradient(to top left, #45609D 0%, #7A91C4 100%);color:#fff;line-height:2.4rem;font-size:1.2rem;width:70%;\""); //CSS 
 
 boolean captivePortal() {
   if (!isIp(server.hostHeader()) && server.hostHeader() != (String(myHostname) + ".local")) {
-//    Serial.print("Host header: ");
-//    Serial.println(String(myHostname));
-//    Serial.println("Request redirected to captive portal");
+    Serial.println("Request redirected to captive portal");
     server.sendHeader("Location", String("http://") + toStringIp(server.client().localIP()), true);
     server.send(302, "text/plain", "");   // Empty content inhibits Content-length header so we have to close the socket ourselves.
     server.client().stop(); // Stop is needed because we sent no content length
@@ -186,15 +194,15 @@ void handleRoot() {
   server.sendHeader("Expires", "-1");
 
   String Page;
-  Page += String(F("<!DOCTYPE html><html><head>")) + csstyle + String(F("<meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Настройки ")) + myHostname + F("</title>");
-  Page += String(F("</head><body><center><div style=\"div_stl\"><h1>Кормилка рыбок</h1>"));
+  Page += String(F("<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Configuration ")) + myHostname + F("</title>");
+  Page += String(F("</head><body><center><div style=\"width:80%;border:0px;border-radius:0.5rem; box-shadow: rgba(99, 99, 99, 0.3) -4px 4px 3px,rgba(99, 99, 99, 0.5) -1px 1px 2px,inset 0px 0px 1px rgba(0,0,0,0.3);\"><h1>Кормилка рыбок</h1>"));
   if (server.client().localIP() == apIP) {
     Page += String(F("<p>Вы подключились к: ")) + softAP_ssid + F("</p>");
   } else {
     Page += String(F("<p>Вы подключились через сеть: ")) + ssid + F("</p>");
   }
   Page += String(F(
-            "<br />  <a href=\"/wifi\" target=\"_\"><input type=\"button\" value=\"Настройки\" class=\"btn_stl\"><br />Powered by:<br />marinaursu & IBishopI</font></div></center></body></html>" ));
+            "<br />  <a href=\"/wifi\" target=\"_\"><input type=\"button\" value=\"Настройки\" style=\"border:0;border-radius:0.5rem; background: linear-gradient(to top left, #45609D 0%, #7A91C4 100%);color:#fff;line-height:2.4rem;font-size:1.2rem;width:90%;\"/></a><br><br><font style=\"font-size: 12px;color:#7A91C4;\">Powered by:<br>marinaursu & IBishopI</font></div></center></body></html>" ));
   server.send(200, "text/html", Page);
   server.client().stop();
 }
@@ -204,7 +212,9 @@ void handleWifi() {
   server.sendHeader("Expires", "-1");
 
   String Page;
-  Page += String(F("<!DOCTYPE html><html><head>")) + csstyle + String(F("<meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"></head><body><center><div class=\"div_stl\"><br /><h1>Настройка WiFi</h1>"));
+  Page += F(
+            "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"></head><body><center><div style=\"width:80%;border:0px;border-radius:0.5rem; box-shadow: rgba(99, 99, 99, 0.3) -4px 4px 3px,rgba(99, 99, 99, 0.5) -1px 1px 2px,inset 0px 0px 1px rgba(0,0,0,0.3);\">"
+            "<br /><h1>Настройка WiFi</h1>");
   if (server.client().localIP() == apIP) {
     Page += String(F("<p>Вы подключены к: ")) + softAP_ssid + F("</p>");
   } else {
@@ -213,9 +223,9 @@ void handleWifi() {
   Page +=  String(F(
              "\r\n<br />"
              "<p>Выберите свою сеть из списка:</p>"));
-//  Serial.println("WLAN scan start");
+  Serial.println("scan start");
   int n = WiFi.scanNetworks();
-//  Serial.println("WLAN scan done");
+  Serial.println("scan done");
   Page += String(F(
             "\r\n<form method='POST' action='wifisave'>"
           "<select name='n' style=\"width:70%;background: transparent;padding:5px;font-size:16px;border:1px solid #ccc;height:34px;margin-bottom:5px;\">"));
@@ -226,13 +236,16 @@ void handleWifi() {
   } else {
     Page += F("<option value=\"none\">(!)Нет доступных сетей</option>");
   }        
-  Page += String(F(   "</select><br /><input type='password' placeholder=' пароль' name='p' style=\"width:70%;background: transparent;padding:0px;font-size:16px;border:1px solid #ccc;height:34px;margin-bottom:5px;\"/><br /><input type='submit' value='Подключится' class='btn_stl'/></form><br /><a href='/'><-назад</a></div></center></body></html>"));
+  Page += String(F(   "</select><br /><input type='password' placeholder=' пароль' name='p' style=\"width:70%;background: transparent;padding:0px;font-size:16px;border:1px solid #ccc;height:34px;margin-bottom:5px;\"/>"
+            "<br /><input type='submit' value='Подключится' " )) + csstyle + F("/></form>"
+            "<br /><a href='/'><-назад</a>"
+            "</div></center></body></html>");
 
   server.send(200, "text/html", Page);
   server.client().stop(); // Stop is needed because we sent no content length
 }
 void handleWifiSave() {
-//  Serial.println("wifi save");
+  Serial.println("wifi save");
   server.arg("n").toCharArray(ssid, sizeof(ssid) - 1);
   server.arg("p").toCharArray(password, sizeof(password) - 1);
   server.sendHeader("Location", "wifi", true);
@@ -242,7 +255,7 @@ void handleWifiSave() {
   server.send(302, "text/plain", "");    // Empty content inhibits Content-length header so we have to close the socket ourselves.
   server.client().stop(); // Stop is needed because we sent no content length
   saveCredentials();
-  delay(1000);
+  delay(300);
   ESP.restart();
 }
 
@@ -281,8 +294,8 @@ void buttonPressed() {
   scndtimer = 0;  
   }
 while ( ( scndtimer - pressedtime ) > buttonHoldTime ){
-//Serial.println("Pressed for: ");
-//Serial.println(( scndtimer - pressedtime ));
+Serial.println("Pressed for: ");
+Serial.println(( scndtimer - pressedtime ));
 digitalWrite(FLASH_LED_PIN, HIGH);
 delay(30);
 digitalWrite(FLASH_LED_PIN, LOW);
@@ -292,7 +305,7 @@ for ( byte i = 0; i < 512; i++ ){
 EEPROM.put(i, 0);
 delay(25);
 EEPROM.commit();
-//Serial.println( i );
+Serial.println( i );
 if ( i == 255 ) {
 break; 
 }}
@@ -306,7 +319,7 @@ String printLocalTime(const char* mask)
 {
   struct tm timeinfo;
   if(!getLocalTime(&timeinfo)){
- //   Serial.println("Failed to obtain time");
+    Serial.println("Failed to obtain time");
     return "NTP unavailable";
   }
   char timeStringBuff[50]; 
@@ -354,32 +367,39 @@ int getNextBufferLen()
 void WIFI_AP_mode() {
   WiFi.mode(WIFI_AP);
   WiFi.softAP(softAP_ssid, softAP_password);
-//  Serial.println(WiFi.softAPConfig(apIP, apIP, netMsk)? "Configuring Soft AP" : "Error in Configuration");    
+  Serial.println(WiFi.softAPConfig(apIP, apIP, netMsk)? "Configuring Soft AP" : "Error in Configuration");    
   WiFi.softAPIP();
   delay(500); //без задержки пустой IP
-//  Serial.print("AP IP address: ");
-//  Serial.println(WiFi.softAPIP());
+  Serial.print("AP IP address: ");
+  Serial.println(WiFi.softAPIP());
   ap_mode_flag=true;
   }
 
  /** Функция подключения к wifi и получения времени с NTP (+ установка сертификата telegram) **/
 void connectWifi() {
   if( exist_cred  ) {
-    ap_mode_flag=false;
- // Serial.println("Connecting as wifi client...");
+  Serial.println("Connecting as wifi client...");
   WiFi.disconnect();
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   int connRes = WiFi.waitForConnectResult();
+  Serial.print("connRes: ");
+  Serial.println(wifi_states[connRes]);
     while (WiFi.status() != WL_CONNECTED)
-  {
-  //  Serial.print(".");
+  { 
+    if(conn_counter==250) { conn_counter=0; ESP.restart(); }
+    Serial.print(".");
     delay(500);
+    detacher();
+    flash_disabler();
+    conn_counter++;
   }
+  conn_counter=0;
+  ap_mode_flag=false;
   secured_client.setCACert(TELEGRAM_CERTIFICATE_ROOT);
-//    Serial.print("\nWiFi connected. IP address: ");
-//  Serial.println(WiFi.localIP());
-//    Serial.print("Retrieving time: ");
+    Serial.print("\nWiFi connected. IP address: ");
+  Serial.println(WiFi.localIP());
+    Serial.print("Retrieving time: ");
   const char* ntpServer = "pool.ntp.org";
   const long  gmtOffset_sec = 7200;
   const int   daylightOffset_sec = 3600;
@@ -387,13 +407,14 @@ void connectWifi() {
   time_t now = time(nullptr);
   while (now < 24 * 3600)
   {
-//    Serial.print(".");
+    Serial.print(".");
     delay(100);
     now = time(nullptr);
   }
-//  Serial.println(now);
-//  Serial.println(printLocalTime("%B %d %H:%M:%S"));
+  Serial.println(now);
+  Serial.println(printLocalTime("%B %d %H:%M:%S"));
   }
+  bot.longPoll = 1;
 }
 
 bool check_allow(String ch_check) {
@@ -420,12 +441,10 @@ String getValue(String data, char separator, int index)
     }
     return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
-
 void feed_fish(int feeder_pos, String fchat_id) {
-feedservo.attach(15);
-feedservo.write(feeder_pos);
+fb = NULL;
+servo_drive(feeder_pos);
 wflag=true;
-lastFeedTime = printLocalTime("%B %d %H:%M:%S");
 bot.sendMessage(fchat_id, "Кормушка 1: покормила!", "Markdown");
 }
 
@@ -436,14 +455,17 @@ void detacher() {
       woflag=!woflag;
       } else {
         if((millis() - feeder_tmr) >= 1000) {
-          feedservo.write(110);
-          } else if((millis() - feeder_tmr) >= 1800) {
-          Serial.print("Servo detached!");
-          feedservo.detach();
+          Serial.println("Turning back");
+          servo_drive(110);
           woflag=!woflag;
           wflag=!wflag;
-          camera_enable_out_clock(&camera_example_config);
-            }
+          } 
+//          else if((millis() - feeder_tmr) >= 1100) {
+//          Serial.println("Turning back");
+//          woflag=!woflag;
+//          wflag=!wflag;
+//          servo_drive(110);
+//            }
         }
     }
 }
@@ -466,16 +488,22 @@ void flash_disabler() {
   }
 }
 
+
+void servo_drive(int pos) {
+          dutyCycle = map(pos, 0, 180, 5, 32);
+          ledcWrite(PWMChannel, dutyCycle); 
+  }
+
 /** Функция проверки сообщений и реакции на них telegram бота */
 void handleNewMessages(int numNewMessages)
 {
-//  Serial.println("handleNewMessages");
-//  Serial.println(String(numNewMessages));
+  Serial.println("handleNewMessages");
+  Serial.println(String(numNewMessages));
   for (int i = 0; i < numNewMessages; i++)
   {
     String chat_id = String(bot.messages[i].chat_id);
     String text = bot.messages[i].text;
-//    Serial.println(chat_id);
+    Serial.println(chat_id);
     if(check_allow(chat_id)) { 
     String from_name = bot.messages[i].from_name;
     if (from_name == "")
@@ -490,40 +518,38 @@ void handleNewMessages(int numNewMessages)
     if (text == "/photo")
     {
       previous_message = text;
-      if(feedservo.attached()) { Serial.println("attached"); } else { Serial.println("detached"); }
+      //if(feedservo.attached()) { Serial.println("attached"); } else { Serial.println("detached"); }
+    //  camera_enable_out_clock(&camera_example_config);
       if(flash_state_enabled) {
       fflag=true;
       flashState = !flashState;
       digitalWrite(FLASH_LED_PIN, flashState);
       }
       fb = NULL;
-      // Take Picture with Camera
       fb = esp_camera_fb_get();
-      //camera_capture();
-      delay(50);
-//      Serial.printf("Took a photo %d x %d with len: %d\n", fb->width, fb->height, fb->len);
+      delay(10);
+      Serial.printf("Took a photo %d x %d with len: %d\n", fb->width, fb->height, fb->len);
       if (!fb)
       {
-//        Serial.println("Camera capture failed");
+        Serial.println("Camera capture failed");
         bot.sendMessage(chat_id, "Camera capture failed", "");
         return;
       }
       dataAvailable = true;
-//      Serial.println("Sending");
+      Serial.println("Sending");
       bot.sendPhotoByBinary(chat_id, "image/jpeg", fb->len,
                             isMoreDataAvailable, nullptr,
                             getNextBuffer, getNextBufferLen);
 
-//      Serial.println("done!");
+      Serial.println("done!");
 
       esp_camera_fb_return(fb);
     }
     if (text == "/feed")
     {
       previous_message = text;
-      fb = NULL;
-      camera_disable_out_clock();
       feed_fish(feed_sizes[feedsize_f], chat_id);
+      lastFeedTime = printLocalTime("%B %d %H:%M:%S");
     }
     if (text == "/feedsize")
     {
@@ -552,6 +578,11 @@ void handleNewMessages(int numNewMessages)
       my_message += feedsize_f;
       my_message += "\n";
       bot.sendMessage(chat_id, my_message, "Markdown");
+    }
+    if (text == "/reboot")
+    {
+      bot.sendMessage(chat_id, "Перезагружаю кормушку 1 ...", "Markdown");
+      ESP.restart();
     }
     if (text == "/start")
     {
@@ -582,13 +613,13 @@ void handleNewMessages(int numNewMessages)
       if(previous_message == "/feedsize") {
         feedsize_f = text.toInt();
         text.toCharArray(feedsize_f_for_eeprom, sizeof(feedsize_f_for_eeprom) - 1);
-//        Serial.print("Storing: ");
-//        Serial.print(feedsize_f_for_eeprom);
-//        
+        Serial.print("Storing: ");
+        Serial.print(feedsize_f_for_eeprom);
+        
         saveCredentials();
         }
       }
-    } else {bot.sendMessage(chat_id, "У Вас нет прав для пользования ботом!", "Markdown");} 
+    }  else {bot.sendMessage(chat_id, "У Вас нет прав для пользования ботом!", "Markdown");} 
   }
 }
 
@@ -601,7 +632,8 @@ void drop_quality() { // Drop quality to 320x240 due of Telegram API issue
     s->set_saturation(s, -2); //lower the saturation
   }
   //drop down frame size for higher initial frame rate
-  s->set_vflip(s, 1);       //flip it back
+  s->set_vflip(s, 1);//flip it back
+  s->set_hmirror(s,1);
   s->set_brightness(s, 2);  //up the blightness just a bit
   s->set_saturation(s, -2); //lower the saturation
   s->set_framesize(s, FRAMESIZE_QVGA);
@@ -611,8 +643,11 @@ void drop_quality() { // Drop quality to 320x240 due of Telegram API issue
 /** Настройки основной программы */
 void setup()
 {
-//  Serial.begin(115200);
-//  Serial.println();
+  Serial.begin(115200);
+  Serial.println();
+  ledcSetup(PWMChannel, PWMFreq, PWMResolution);
+  ledcAttachPin(servoPin, PWMChannel);
+  ledcWrite(PWMChannel, dutyCycle);
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
   camera_example_config.ledc_channel = LEDC_CHANNEL_0;
   camera_example_config.ledc_timer = LEDC_TIMER_0;
@@ -640,25 +675,25 @@ void setup()
   
 my_camera_init();
 drop_quality();
-camera_disable_out_clock();
-delay(100);
-camera_enable_out_clock(&camera_example_config);
+//camera_disable_out_clock();
+//delay(100);
+//camera_enable_out_clock(&camera_example_config);
   pinMode(inPins, INPUT); 
   pinMode(FLASH_LED_PIN, OUTPUT);
   digitalWrite(FLASH_LED_PIN, flashState); //defaults to low
 
   loadCredentials(); // Загрузка WLAN имя/пароля из EEPROM
-  if( exist_cred > 0) { connectWifi(); ap_mode_flag=false; } else { WIFI_AP_mode(); }
+  if( exist_cred > 0) { connectWifi(); } else { WIFI_AP_mode(); }
 
-  bot.longPoll = 1; // Бот ожидает 1 секунду на новое сообщение
-
+  bot.longPoll = 0; // Бот ожидает 1 секунду на новое сообщение
+  if(WiFi.status() != WL_CONNECTED) {
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
   dnsServer.start(DNS_PORT, "*", apIP);
-          if (!MDNS.begin(myHostname)) {
-//          Serial.println("Error setting up MDNS responder!");
-         bool f = false;
+            if (!MDNS.begin(myHostname)) {
+          Serial.println("Error setting up MDNS responder!");
+        //bool f = false;
         } else {
-//          Serial.println("mDNS responder started");
+          Serial.println("mDNS responder started");
           // Add service to MDNS-SD
           MDNS.addService("http", "tcp", 80);
         }
@@ -670,23 +705,28 @@ camera_enable_out_clock(&camera_example_config);
   server.on("/fwlink", handleRoot);  //Microsoft captive portal. Maybe not needed. Might be handled by notFound handler.
   server.onNotFound(handleNotFound);
   server.begin(); // Web server start
-//  Serial.println("HTTP server started");
-//  Serial.println(WiFi.status());
+  Serial.println("HTTP server started");
+  Serial.println(WiFi.status());
+  }
 }
 
 /** Основной цикл программы */
 void loop()
-{ 
+{
   detacher();
   flash_disabler();
+  if(WiFi.status() != WL_CONNECTED) {
   dnsServer.processNextRequest();
   server.handleClient();
+  }
   if(!ap_mode_flag) {
   if(getLocalTime(&timeinfo)){
   if(!schedule_feed_state && printLocalTime("%H").toInt() == scheduled_time_arr[0] && printLocalTime("%M").toInt() == scheduled_time_arr[1]) {
+   //camera_disable_out_clock();
+  // delay(10);
    schedule_feed_state=true;
-   camera_disable_out_clock(); 
    feed_fish(feed_sizes[feedsize_f],chat_id_to_response);
+   lastFeedTime = printLocalTime("%B %d %H:%M:%S");
     } else if(schedule_feed_state && printLocalTime("%M").toInt() != scheduled_time_arr[1]) { schedule_feed_state=false; }
   }
   if (digitalRead(inPins) == HIGH ) {
@@ -695,13 +735,12 @@ void loop()
    pressedtime = 0;
   }
   if(WiFi.status() != WL_CONNECTED) { connectWifi(); } else {
-
   if (millis() - bot_lasttime > BOT_MTBS)
   {
     int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
     while (numNewMessages)
     {
-   //   Serial.println("got response");
+      Serial.println("got response");
       handleNewMessages(numNewMessages);
       numNewMessages = bot.getUpdates(bot.last_message_received + 1);
     }
