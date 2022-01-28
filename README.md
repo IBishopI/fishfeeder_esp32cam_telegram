@@ -95,3 +95,11 @@ status - Display current information
 - FDM 3D printer
 - PLA/ABS plastic
 - solder
+
+## Construct photos
+> Bot screenshot
+![](/src/docs/screen_bot.jpg)
+
+> Photos
+![](/src/docs/ph1_feeder.jpg)
+![](/src/docs/ph2_feeder.jpg)
