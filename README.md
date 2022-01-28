@@ -69,6 +69,13 @@ feed - Feed the fish
 schedule - Schedule a feed
 feedsize - Set portion
 status - Display current information
+wobble - Clean feeder
+reboot - Restart device
+q1 - photo quality 320х240
+q2 - photo quality 640х480
+q3 - photo quality 800x600 (non-stable)
+q4 - photo quality 1024x768 (unsupported by telegram bot API)
+q5 - photo quality 1600x1200 (unsupported by telegram bot API)
 ```
 >  
 ![](/src/docs/bot_father_6.png)
