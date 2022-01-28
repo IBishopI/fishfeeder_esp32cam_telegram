@@ -17,7 +17,7 @@
 //static camera_config_t camera_example_config;
 #define APSSID "fishfeeder" //Имя точки доступа
 #define APPSK  "10203040" //Пароль точки доступа
-#define BOT_TOKEN "xxxxxxxx:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" //Токен телеграм бота
+#define BOT_TOKEN "xxxxxxxx:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" //Токен телеграм бота
 #define FLASH_LED_PIN 4 // Пин вспышки
 
 /* PWM vars for servo */
@@ -27,6 +27,7 @@ const int PWMFreq = 50;
 const int PWMChannel = 2;
 const int PWMResolution = 8;
 const int MAX_DUTY_CYCLE = (int)(pow(2, PWMResolution) - 1);
+
 
 /* Переменные пинов подключения камеры */
 #define CAMERA_MODEL_AI_THINKER
@@ -82,8 +83,8 @@ UniversalTelegramBot bot(BOT_TOKEN, secured_client); //Объект телегр
 bool flashState = LOW,wflag=false,woflag=false,fflag=false,foflag=false,cflag=false,coflag=false,schedule_feed_state=false,dataAvailable = false,flash_state_enabled=false, schedule_exist=false,ap_mode_flag=false; // переменные состояний
 camera_fb_t *fb = NULL; // Очищаем буффер камеры
 String previous_message,my_message,lastFeedTime,scheduled_time_str; // Переменные планировщика кормления
-int chat_allowed_ids[] = {1111111111,2222222222,33333333333}; // Разрешенные чаты пользователей для работы с ботом (получите у бота @IDBot)
-String chat_id_to_response = "333333333333"; // Chatid для отправки сообщений в режиме запланированного кормления
+int chat_allowed_ids[] = {XXXXXXXXXXX,YYYYYYYYY,ZZZZZZZZZZZ}; // Разрешенные чаты пользователей для работы с ботом (получите у бота @IDBot)
+String chat_id_to_response = "YYYYYYYYYYYY"; // Chatid для отправки сообщений в режиме запланированного кормления
 int scheduled_time_arr[3] = {0,0}, feed_sizes[] = {130,135,140,145,150,155,160,165,170,175,180}, feedsize_f=5; // Служебные переменные для кормления, массив с градусами для серво а индекс это размер порции
 bool isMoreDataAvailable();
 byte *getNextBuffer();
@@ -173,8 +174,8 @@ esp_err_t my_camera_init() {
 }
 
 /** Функции обработки страниц вэб сервера */
-const String csstyle = F("style=\"border:0;border-radius:0.5rem; background: linear-gradient(to top left, #45609D 0%, #7A91C4 100%);color:#fff;line-height:2.4rem;font-size:1.2rem;width:70%;\""); //CSS 
-
+//const String csstyle = F("style=\"border:0;border-radius:0.5rem; background: linear-gradient(to top left, #45609D 0%, #7A91C4 100%);color:#fff;line-height:2.4rem;font-size:1.2rem;width:70%;\""); //CSS 
+const String csstyle = F("<style type=\"text/css\"> .div_stl{ width:80%;border:0px;border-radius:0.5rem; box-shadow: rgba(99, 99, 99, 0.3) -4px 4px 3px,rgba(99, 99, 99, 0.5) -1px 1px 2px,inset 0px 0px 1px rgba(0,0,0,0.3); } .btn_stl{border:0;border-radius:0.5rem; background: linear-gradient(to top left, #45609D 0%, #7A91C4 100%);color:#fff;line-height:2.4rem;font-size:1.2rem;width:70%;} .btn_stl:hover{background: linear-gradient(to top left, #699D45 0%, #8DC47A 100%);} </style>"); //CSS 
 boolean captivePortal() {
   if (!isIp(server.hostHeader()) && server.hostHeader() != (String(myHostname) + ".local")) {
     Serial.println("Request redirected to captive portal");
@@ -194,15 +195,15 @@ void handleRoot() {
   server.sendHeader("Expires", "-1");
 
   String Page;
-  Page += String(F("<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Configuration ")) + myHostname + F("</title>");
-  Page += String(F("</head><body><center><div style=\"width:80%;border:0px;border-radius:0.5rem; box-shadow: rgba(99, 99, 99, 0.3) -4px 4px 3px,rgba(99, 99, 99, 0.5) -1px 1px 2px,inset 0px 0px 1px rgba(0,0,0,0.3);\"><h1>Кормилка рыбок</h1>"));
+  Page += String(F("<!DOCTYPE html><html><head>")) + csstyle + String(F("<meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Configuration ")) + myHostname + F("</title>");
+  Page += String(F("</head><body><center><div style=\"div_stl\"><h1>Кормилка рыбок</h1>"));
   if (server.client().localIP() == apIP) {
     Page += String(F("<p>Вы подключились к: ")) + softAP_ssid + F("</p>");
   } else {
     Page += String(F("<p>Вы подключились через сеть: ")) + ssid + F("</p>");
   }
   Page += String(F(
-            "<br />  <a href=\"/wifi\" target=\"_\"><input type=\"button\" value=\"Настройки\" style=\"border:0;border-radius:0.5rem; background: linear-gradient(to top left, #45609D 0%, #7A91C4 100%);color:#fff;line-height:2.4rem;font-size:1.2rem;width:90%;\"/></a><br><br><font style=\"font-size: 12px;color:#7A91C4;\">Powered by:<br>marinaursu & IBishopI</font></div></center></body></html>" ));
+            "<br />  <a href=\"/wifi\" target=\"_\"><input type=\"button\" value=\"Настройки\" class=\"btn_stl\"/></a><br><br><font style=\"font-size: 12px;color:#7A91C4;\">Powered by (git):<br>marinaursu & IBishopI</font></div></center></body></html>" ));
   server.send(200, "text/html", Page);
   server.client().stop();
 }
@@ -212,9 +213,8 @@ void handleWifi() {
   server.sendHeader("Expires", "-1");
 
   String Page;
-  Page += F(
-            "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"></head><body><center><div style=\"width:80%;border:0px;border-radius:0.5rem; box-shadow: rgba(99, 99, 99, 0.3) -4px 4px 3px,rgba(99, 99, 99, 0.5) -1px 1px 2px,inset 0px 0px 1px rgba(0,0,0,0.3);\">"
-            "<br /><h1>Настройка WiFi</h1>");
+  Page += String(F("<!DOCTYPE html><html><head>")) + csstyle + String(F("<meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"></head><body><center><div class=\"div_stl\"><br /><h1>Настройка WiFi</h1>"));
+            
   if (server.client().localIP() == apIP) {
     Page += String(F("<p>Вы подключены к: ")) + softAP_ssid + F("</p>");
   } else {
@@ -236,10 +236,7 @@ void handleWifi() {
   } else {
     Page += F("<option value=\"none\">(!)Нет доступных сетей</option>");
   }        
-  Page += String(F(   "</select><br /><input type='password' placeholder=' пароль' name='p' style=\"width:70%;background: transparent;padding:0px;font-size:16px;border:1px solid #ccc;height:34px;margin-bottom:5px;\"/>"
-            "<br /><input type='submit' value='Подключится' " )) + csstyle + F("/></form>"
-            "<br /><a href='/'><-назад</a>"
-            "</div></center></body></html>");
+  Page += String(F(   "</select><br /><input type='password' placeholder=' пароль' name='p' style=\"width:70%;background: transparent;padding:0px;font-size:16px;border:1px solid #ccc;height:34px;margin-bottom:5px;\"/><br /><input type='submit' value='Подключится' class='btn_stl'/></form><br /><a href='/'><-назад</a></div></center></body></html>"));
 
   server.send(200, "text/html", Page);
   server.client().stop(); // Stop is needed because we sent no content length
@@ -441,11 +438,28 @@ String getValue(String data, char separator, int index)
     }
     return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
+void wobble_feeder() {
+  servo_drive(130);
+  delay(200);
+  servo_drive(110);
+  delay(200);
+  servo_drive(140);
+  delay(200);
+  servo_drive(110);
+  delay(200);
+  servo_drive(135);
+  delay(200);
+  servo_drive(110);
+  delay(200);
+  servo_drive(150);
+  delay(200);
+  servo_drive(110);
+  }
 void feed_fish(int feeder_pos, String fchat_id) {
 fb = NULL;
 servo_drive(feeder_pos);
 wflag=true;
-bot.sendMessage(fchat_id, "Кормушка 1: покормила!", "Markdown");
+bot.sendMessage(fchat_id, "Кормушка 3: покормила!", "Markdown");
 }
 
 void detacher() {
@@ -551,6 +565,11 @@ void handleNewMessages(int numNewMessages)
       feed_fish(feed_sizes[feedsize_f], chat_id);
       lastFeedTime = printLocalTime("%B %d %H:%M:%S");
     }
+    if (text == "/wobble")
+    {
+    wobble_feeder();
+    bot.sendMessage(chat_id, "Кормушка 3: Чистка (возможен перекорм рыбы)", "Markdown");
+    }
     if (text == "/feedsize")
     {
       previous_message = text;
@@ -566,7 +585,7 @@ void handleNewMessages(int numNewMessages)
     if (text == "/status")
     {
       previous_message = text;
-      my_message = "Кормушка 1:\nIP-адрес(у роутер): ";
+      my_message = "Кормушка 3:\nIP-адрес(у роутер): ";
       my_message += WiFi.localIP().toString().c_str();
       my_message += "\nВремя посл.кормления: ";
       my_message += lastFeedTime;
@@ -580,10 +599,38 @@ void handleNewMessages(int numNewMessages)
       bot.sendMessage(chat_id, my_message, "Markdown");
     }
     if (text == "/reboot")
-    {
-      bot.sendMessage(chat_id, "Перезагружаю кормушку 1 ...", "Markdown");
+    { 
+      if(previous_message != "/reboot" && (esp_timer_get_time()/1000000) >= 10) {
+      previous_message = text;
+      bot.sendMessage(chat_id, "Перезагружаю кормушку 3 ...", "Markdown");
       ESP.restart();
+      }
     }
+    if(text == "/q1") {
+     bot.sendMessage(chat_id, "Качество фото QVGA (320x240)", "Markdown");
+     sensor_t *s = esp_camera_sensor_get();
+     s->set_framesize(s, FRAMESIZE_QVGA);
+      }
+    if(text == "/q2") {
+     bot.sendMessage(chat_id, "Качество фото VGA (640x480)", "Markdown");
+     sensor_t *s = esp_camera_sensor_get();
+     s->set_framesize(s, FRAMESIZE_VGA);
+      }
+    if(text == "/q3") {
+     bot.sendMessage(chat_id, "Качество фото SVGA (800x600)", "Markdown");
+     sensor_t *s = esp_camera_sensor_get();
+     s->set_framesize(s, FRAMESIZE_SVGA);
+      }
+    if(text == "/q4") {
+     bot.sendMessage(chat_id, "Качество фото XGA (1024x768", "Markdown");
+     sensor_t *s = esp_camera_sensor_get();
+     s->set_framesize(s, FRAMESIZE_XGA);
+      }
+    if(text == "/q5") {
+     bot.sendMessage(chat_id, "Качество фото UXGA (1600x1200)", "Markdown");
+     sensor_t *s = esp_camera_sensor_get();
+     s->set_framesize(s, FRAMESIZE_UXGA);
+      }
     if (text == "/start")
     {
       previous_message = text;
@@ -622,6 +669,7 @@ void handleNewMessages(int numNewMessages)
     }  else {bot.sendMessage(chat_id, "У Вас нет прав для пользования ботом!", "Markdown");} 
   }
 }
+
 
 void drop_quality() { // Drop quality to 320x240 due of Telegram API issue
     sensor_t *s = esp_camera_sensor_get();
@@ -713,6 +761,9 @@ drop_quality();
 /** Основной цикл программы */
 void loop()
 {
+   if(((esp_timer_get_time()/1000000)) >= 172800) {
+    ESP.restart();
+    }
   detacher();
   flash_disabler();
   if(WiFi.status() != WL_CONNECTED) {
@@ -729,10 +780,11 @@ void loop()
    lastFeedTime = printLocalTime("%B %d %H:%M:%S");
     } else if(schedule_feed_state && printLocalTime("%M").toInt() != scheduled_time_arr[1]) { schedule_feed_state=false; }
   }
-  if (digitalRead(inPins) == HIGH ) {
+  if (digitalRead(inPins) == HIGH && (esp_timer_get_time()/1000000) > 10 ) {
     buttonPressed();
     } else {
    pressedtime = 0;
+   scndtimer = 0;
   }
   if(WiFi.status() != WL_CONNECTED) { connectWifi(); } else {
   if (millis() - bot_lasttime > BOT_MTBS)
